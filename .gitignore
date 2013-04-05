@@ -1,0 +1,14 @@
+# git ignore for netbeans project
+
+build
+nbbuild
+dist
+nbdist
+nbproject/private
+
+# hidden irrelevant files
+*.DS_Store
+
+
+
+/masipj2me/nbproject/private/
