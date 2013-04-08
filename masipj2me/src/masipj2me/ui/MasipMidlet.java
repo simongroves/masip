@@ -89,7 +89,7 @@ public class MasipMidlet extends MIDlet {
     private void showChallenges() {
         try {
             status.setText("Fetching latest challenges..");
-            final JSONArray challenges = dataSync.getChallengeList();
+            final JSONArray challenges = dataSync.getChallengeList(true);
             ChallengeListModel model = new ChallengeListModel(challenges); 
              model.addSelectionListener(new SelectionListener() {
                 public void selectionChanged(int i, int i1) {

@@ -80,10 +80,12 @@ public class DataSync {
         return null;
     }
 
-    public JSONArray getChallengeList() throws IOException, JSONException, RecordStoreException {
+    public JSONArray getChallengeList(boolean useCache) throws IOException, JSONException, RecordStoreException {
         if (challenges == null) {
             // try local storage first (null if nothing stored)
-            challenges = fetchChallengeListLocal();
+            if (useCache) {
+                challenges = fetchChallengeListLocal();
+            }
             
             if (challenges == null) {                 
                // get from server and cache local
