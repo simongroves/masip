@@ -4,9 +4,7 @@
  */
 package masipj2me.ui;
 
-import com.sun.lwuit.events.DataChangedListener;
-import com.sun.lwuit.events.SelectionListener;
-import com.sun.lwuit.list.ListModel;
+import com.sun.lwuit.list.DefaultListModel;
 import org.json.me.JSONArray;
 import org.json.me.JSONException;
 import org.json.me.JSONObject;
@@ -15,7 +13,7 @@ import org.json.me.JSONObject;
  *
  * @author john
  */
-public class ChallengeListModel implements ListModel {
+public class ChallengeListModel extends DefaultListModel {
 
     private JSONArray challenges;
     private int selectedIndex;
@@ -38,31 +36,11 @@ public class ChallengeListModel implements ListModel {
         return challenges.length();
     }
 
-    public int getSelectedIndex() {
-        return selectedIndex;
-    }
-
-    public void setSelectedIndex(int i) {
-        this.selectedIndex = i;
-    }
-
-    public void addDataChangedListener(DataChangedListener dl) {
-    }
-
-    public void removeDataChangedListener(DataChangedListener dl) {
-    }
-
-    public void addSelectionListener(SelectionListener sl) {
-    }
-
-    public void removeSelectionListener(SelectionListener sl) {
-    }
-
     public void addItem(Object o) {
-        // Don't allow adding yet
+        throw new UnsupportedOperationException("not impl");
     }
 
     public void removeItem(int i) {
-        // Don't allow yet
+        throw new UnsupportedOperationException("not impl");
     }
 }

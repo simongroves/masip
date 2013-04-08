@@ -11,6 +11,7 @@ import com.sun.lwuit.List;
 import com.sun.lwuit.TextArea;
 import com.sun.lwuit.events.ActionEvent;
 import com.sun.lwuit.events.ActionListener;
+import com.sun.lwuit.events.SelectionListener;
 import com.sun.lwuit.layouts.BorderLayout;
 import javax.microedition.midlet.*;
 import masipj2me.model.DataSync;
@@ -29,6 +30,7 @@ public class MasipMidlet extends MIDlet {
     private Command showCommand;
     private Command exitCommand;
     private Command homeCommand;
+    private TextArea challengeDescription;
 
     public void startApp() {
         Display.init(this);
@@ -41,8 +43,11 @@ public class MasipMidlet extends MIDlet {
         homeForm.addComponent(BorderLayout.CENTER, status);
 
         challengesForm = new Form("Current Challenges");
+        challengesForm.setLayout(new BorderLayout());
         challengesList = new List();
-        challengesForm.addComponent(challengesList);
+        challengesForm.addComponent(BorderLayout.CENTER, challengesList);
+        challengeDescription = new TextArea();
+        challengesForm.addComponent(BorderLayout.SOUTH, challengeDescription);
 
         showCommand = new Command("Show");
         homeForm.addCommand(showCommand);
@@ -84,8 +89,18 @@ public class MasipMidlet extends MIDlet {
     private void showChallenges() {
         try {
             status.setText("Fetching latest challenges from server..");
-            JSONArray challenges = dataSync.getChallengeList();
-            challengesList.setModel(new ChallengeListModel(challenges));
+            final JSONArray challenges = dataSync.getChallengeList();
+            ChallengeListModel model = new ChallengeListModel(challenges); 
+             model.addSelectionListener(new SelectionListener() {
+                public void selectionChanged(int i, int i1) {
+                    try {
+                        challengeDescription.setText(challenges.getJSONObject(i).getJSONObject("challenge").getString("chalDescription"));
+                    } catch (Exception x) {
+                        challengeDescription.setText(String.valueOf(x));
+                    }
+                }
+            });
+            challengesList.setModel(model);
             status.setText("Challenges loaded. Use 'Show' to see them.");
             challengesForm.show();
         } catch (Exception e) {
