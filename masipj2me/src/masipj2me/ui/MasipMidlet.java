@@ -11,6 +11,7 @@ import com.sun.lwuit.List;
 import com.sun.lwuit.TextArea;
 import com.sun.lwuit.events.ActionEvent;
 import com.sun.lwuit.events.ActionListener;
+import com.sun.lwuit.layouts.BorderLayout;
 import javax.microedition.midlet.*;
 import masipj2me.model.DataSync;
 import org.json.me.JSONArray;
@@ -33,10 +34,11 @@ public class MasipMidlet extends MIDlet {
         Display.init(this);
 
         homeForm = new Form("Challenges Home");
+        homeForm.setLayout(new BorderLayout());
 
         status = new TextArea("Use 'Show' to fetch challenges");
         status.setEditable(false);
-        homeForm.addComponent(status);
+        homeForm.addComponent(BorderLayout.CENTER, status);
 
         challengesForm = new Form("Current Challenges");
         challengesList = new List();
