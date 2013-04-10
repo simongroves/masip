@@ -13,26 +13,26 @@ import org.json.me.JSONObject;
  *
  * @author john
  */
-public class ChallengeListModel extends DefaultListModel {
+public class ActionListModel extends DefaultListModel {
 
-    private JSONArray challenges;
+    private JSONArray microactions;
  
-    public ChallengeListModel(JSONArray challenges) {
-        this.challenges = challenges;
+    public ActionListModel(JSONArray microactions) {
+        this.microactions = microactions;
     }
 
     public Object getItemAt(int i) {
         try {
-            JSONObject descriptor = challenges.getJSONObject(i);
-            JSONObject challenge = descriptor.getJSONObject("challenge");
-            return challenge.get("chalName");
+            JSONObject descriptor = microactions.getJSONObject(i);
+            JSONObject action = descriptor.getJSONObject("challengeAction");
+            return action.get("description");
         } catch (JSONException e) {
             return e.getMessage();
         }
     }
 
     public int getSize() {
-        return challenges.length();
+        return microactions.length();
     }
 
     public void addItem(Object o) {

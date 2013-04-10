@@ -16,6 +16,7 @@ import com.sun.lwuit.layouts.BorderLayout;
 import javax.microedition.midlet.*;
 import masipj2me.model.DataSync;
 import org.json.me.JSONArray;
+import org.json.me.JSONObject;
 
 /**
  * @author john
@@ -27,10 +28,14 @@ public class MasipMidlet extends MIDlet {
     private TextArea status;
     private Form challengesForm;
     private List challengesList;
-    private Command showCommand;
+    private Command showChallengesCommand;
+    private Command showActionsCommand;
     private Command exitCommand;
     private Command homeCommand;
-    private TextArea challengeDescription;
+    private Command backCommand;
+   private TextArea challengeDescription;
+    private Form microactionsForm;
+    private List microactionsList;
 
     public void startApp() {
         Display.init(this);
@@ -47,20 +52,32 @@ public class MasipMidlet extends MIDlet {
         challengesList = new List();
         challengesForm.addComponent(BorderLayout.CENTER, challengesList);
         challengeDescription = new TextArea();
+        challengeDescription.setEditable(false);
         challengesForm.addComponent(BorderLayout.SOUTH, challengeDescription);
+        
+        microactionsForm = new Form("Current Actions");
+        microactionsForm.setLayout(new BorderLayout());
+        microactionsList = new List();
+        microactionsForm.addComponent(BorderLayout.CENTER, microactionsList);
 
-        showCommand = new Command("Show");
-        homeForm.addCommand(showCommand);
+        showChallengesCommand = new Command("Show");
+        homeForm.addCommand(showChallengesCommand);
 
         exitCommand = new Command("Exit");
         homeForm.addCommand(exitCommand);
 
         homeCommand = new Command("Home");
         challengesForm.addCommand(homeCommand);
+        
+        showActionsCommand = new Command("Show");
+        challengesForm.addCommand(showActionsCommand);
+        
+        backCommand = new Command("Back");
+        microactionsForm.addCommand(backCommand);
 
         homeForm.addCommandListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                if (e.getCommand() == showCommand) {
+                if (e.getCommand() == showChallengesCommand) {
                     showChallenges();
                 } else if (e.getCommand() == exitCommand) {
                     notifyDestroyed();
@@ -70,14 +87,24 @@ public class MasipMidlet extends MIDlet {
 
         challengesForm.addCommandListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                if (e.getCommand() == homeCommand) {
-                    homeForm.show();
+                if (e.getCommand() == showActionsCommand) {
+                    showActions();
+                } else if (e.getCommand() == homeCommand) {
+                    showHome();
                 }
             }
         });
-
+        
+        microactionsForm.addCommandListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (e.getCommand() == backCommand) {
+                    showChallenges();
+                }
+            }
+        });
+        
         // Start at home page
-        homeForm.show();
+        showHome();
     }
 
     public void pauseApp() {
@@ -85,13 +112,18 @@ public class MasipMidlet extends MIDlet {
 
     public void destroyApp(boolean unconditional) {
     }
+    
+    private void showHome() {
+        homeForm.show();
+        challengesList.requestFocus(); // Make should list goes up & down
+    }
 
     private void showChallenges() {
         try {
             status.setText("Fetching latest challenges..");
             final JSONArray challenges = dataSync.getChallengeList(true);
             ChallengeListModel model = new ChallengeListModel(challenges); 
-             model.addSelectionListener(new SelectionListener() {
+            model.addSelectionListener(new SelectionListener() {
                 public void selectionChanged(int i, int i1) {
                     try {
                         challengeDescription.setText(challenges.getJSONObject(i).getJSONObject("challenge").getString("chalDescription"));
@@ -104,7 +136,26 @@ public class MasipMidlet extends MIDlet {
             status.setText("Challenges loaded. Use 'Show' to see them.");
             challengesForm.show();
         } catch (Exception e) {
+            homeForm.show();
             status.setText("Cannot load challenges: " + String.valueOf(e));
+        }
+    }
+    
+    private void showActions() {
+        try {
+            status.setText("Fetching actions for selection..");
+            int selected = challengesList.getSelectedIndex();
+            JSONObject wrapper = dataSync.getChallengeList(true).getJSONObject(selected);
+            JSONObject challenge = wrapper.getJSONObject("challenge");
+            String id = challenge.getString("id");
+            final JSONArray actions = dataSync.getChallengeActions(id);
+            ActionListModel model = new ActionListModel(actions); 
+            microactionsList.setModel(model);
+            microactionsForm.show();
+            microactionsList.requestFocus();
+        } catch (Exception e) {
+            homeForm.show();
+            status.setText("Cannot load actions: " + String.valueOf(e));
         }
     }
 }

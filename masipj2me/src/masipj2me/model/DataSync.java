@@ -7,6 +7,7 @@ package masipj2me.model;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Vector;
 import javax.microedition.io.Connector;
 import javax.microedition.io.HttpConnection;
 import javax.microedition.rms.RecordEnumeration;
@@ -15,6 +16,7 @@ import javax.microedition.rms.RecordStoreException;
 import javax.microedition.rms.RecordStoreNotFoundException;
 import org.json.me.JSONArray;
 import org.json.me.JSONException;
+import org.json.me.JSONObject;
 
 /**
  *
@@ -23,11 +25,15 @@ import org.json.me.JSONException;
 public class DataSync {
 
     private final String CHALLENGE_LIST_URL = "http://microactions.net/mobile/tsla/dataSync/challengeList.php";
+    private final String MICROACTIONS_LIST_URL = "http://microactions.net/mobile/tsla/dataSync/challengeActionList.php";
     private final String USER_AGENT = "Mozilla/5.0 (Series40)";
     private final int JSON_BUFFER = 8 * 1024; // 8K buffer (if json bigger than this it becomes inefficient)
     private final String CHALLENGE_STORE = "Challenges";
+    private final String MICROACTION_STORE = "MicroActions";
+    
     private JSONArray challenges;
-
+    private JSONArray microactions;
+    
     public DataSync() {
     }
 
@@ -70,9 +76,23 @@ public class DataSync {
         String json = fetchJsonRemote(CHALLENGE_LIST_URL);
         return new JSONArray(json);
     }
+    
+    private JSONArray fetchMicroActionListRemote() throws IOException, JSONException {
+        String json = fetchJsonRemote(MICROACTIONS_LIST_URL);
+        return new JSONArray(json);       
+    }
 
     private JSONArray fetchChallengeListLocal() throws IOException, JSONException, RecordStoreException {
         String json = fetchJsonLocal(CHALLENGE_STORE);
+        if (json != null) {
+            return new JSONArray(json);
+        }
+
+        return null;
+    }
+    
+    private JSONArray fetchMicroActionListLocal() throws IOException, JSONException, RecordStoreException {
+        String json = fetchJsonLocal(MICROACTION_STORE);
         if (json != null) {
             return new JSONArray(json);
         }
@@ -96,10 +116,32 @@ public class DataSync {
 
         return challenges;
     }
+    
+    public JSONArray getMicroActionList(boolean useCache) throws IOException, JSONException, RecordStoreException {
+        if (microactions == null) {
+            // try local storage first (null if nothing stored)
+            if (useCache) {
+                microactions = fetchMicroActionListLocal();
+            }
+
+            if (microactions == null) {
+                // get from server and cache local
+                microactions = fetchMicroActionListRemote();
+                storeMicroActionListLocal(microactions);
+            }
+        }
+
+        return microactions;
+    }
 
     public void storeChallengeListLocal(JSONArray challenges) throws RecordStoreException {
         storeJsonLocal(CHALLENGE_STORE, challenges.toString());
     }
+    
+    public void storeMicroActionListLocal(JSONArray microactions) throws RecordStoreException {
+        storeJsonLocal(MICROACTION_STORE, microactions.toString());
+    }
+
 
     public void storeJsonLocal(String key, String json) throws RecordStoreException {
         RecordStore recordStore = RecordStore.openRecordStore(key, true);
@@ -133,5 +175,23 @@ public class DataSync {
         } catch (RecordStoreNotFoundException x) {
             return null;
         }
+    }
+    
+    public JSONArray getChallengeActions(String challengeId) throws IOException, JSONException, RecordStoreException {
+        if (microactions == null) {
+            getMicroActionList(true);
+        }
+        
+        // Filter microactions to produce a list only for that challenge
+        Vector result = new Vector();
+        for (int i = 0; i < microactions.length(); i++) {
+            JSONObject wrapper = microactions.getJSONObject(i);
+            JSONObject action = wrapper.getJSONObject("challengeAction");
+            if (challengeId.equals(action.getString("challengeId"))) {
+                result.addElement(wrapper);
+            }
+        }
+        
+        return new JSONArray(result);
     }
 }
